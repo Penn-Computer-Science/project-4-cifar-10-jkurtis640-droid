@@ -65,3 +65,8 @@ ax[1].set_ylabel("Accuracy")
 plt.tight_layout()
 plt.show()
 
+model.summary()
+## Reflection
+## 1. I noticed that mnist used on hot and required RMSprop while Cifar 10 used  the adam optimizer and used to_categrical.
+## I also noticed that MNist was predictions based on numbers 0-9 while Cifar 10 was predictions based on physical things like airplane frog horse etc.
+## 2. 
