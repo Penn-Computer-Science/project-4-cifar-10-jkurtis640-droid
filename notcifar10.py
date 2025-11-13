@@ -1,10 +1,12 @@
  
 import tensorflow as tf 
 from keras.datasets import cifar10
+import seaborn as sns 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import math
 
 print(tf.__version__)##(sns.__version__)
 
@@ -66,6 +68,55 @@ plt.tight_layout()
 plt.show()
 
 model.summary()
+
+#predict the test data
+test_loss, test_acc = model.evaluate(x_test, y_test)
+print('Test accuracy:', test_acc)
+
+#generate the confusion matrix
+# Predict the values from the testing dataset
+Y_pred = model.predict(x_test)
+# Convert predictions classes to one hot vectors 
+Y_pred_classes = np.argmax(Y_pred, axis=1) 
+# Convert testing observations to one hot vectors
+Y_true = np.argmax(y_test, axis=1)
+# compute the confusion matrix
+confusion_mtx = tf.math.confusion_matrix(Y_true, Y_pred_classes) 
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(confusion_mtx, annot=True, fmt='g', xticklabels=class_labels, yticklabels=class_labels)
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.show()
+
+# Visualize the activations of each layer for a sample image
+sample_image = x_test[0]  # Select a sample image from the test set
+sample_image = np.expand_dims(sample_image, axis=0)  # Add batch dimension
+# Create a model that outputs the activations of each layer
+layer_outputs = [layer.output for layer in model.layers]
+activation_model = tf.keras.models.Model(inputs=model.inputs, outputs=layer_outputs)
+# Get the activations for the sample image
+activations = activation_model.predict(sample_image)
+# Plot the activations for each layer
+for layer_index, activation in enumerate(activations):
+    num_filters = activation.shape[-1]
+    size = activation.shape[1]
+
+    
+    # Create a grid to display the activations
+    grid_size = int(np.ceil(np.sqrt(num_filters)))
+    fig, axes = plt.subplots(grid_size, grid_size, figsize=(12,12))
+    fig.suptitle(f'Layer {layer_index + 1} Activations', fontsize=16)
+
+    for i in range(grid_size * grid_size):
+        ax = axes[i // grid_size, i % grid_size]
+        if i < num_filters:
+          ax.imshow(activation[0, :, :, i], cmap='viridis')
+        ax.axis('off')
+    
+    plt.tight_layout()
+    plt.show()
 ## Reflection
 ## 1. I noticed that mnist used on hot and required RMSprop while Cifar 10 used  the adam optimizer and used to_categrical.
 ## I also noticed that MNist was predictions based on numbers 0-9 while Cifar 10 was predictions based on physical things like airplane frog horse etc.
