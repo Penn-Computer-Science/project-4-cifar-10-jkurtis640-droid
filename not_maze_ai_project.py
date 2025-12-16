@@ -202,7 +202,7 @@ def test_agent(agent, maze, num_episodes=1):
     episode_reward, episode_step, path = finish_episode(agent, maze, num_episodes, train=False)
 
     print("Learned Path")
-    for row, col in path:
+    for row, cols in path:
         print(f"({row}, {cols}->", end='')
     print("Goal")
 
@@ -217,3 +217,52 @@ def test_agent(agent, maze, num_episodes=1):
 
     plt.text(maze.start_position[0], maze.start_postion[1], 'S', ha='center', va='center',color='red', fontsize=20)
     plt.text(maze.goal_position[0], maze.goal_postion[1], 'G', ha='center', va='center',color='green', fontsize=20)
+
+    for position in path:
+        plt.text(position[0], position[1], "#", va='center', color='blue',fontsize=20)
+
+    plt.xticks([]), plt.yticks([])
+    plt.grid(color='black', linewidth=2)
+    plt.show()
+    agent = QLearningAgent(maze)
+    test_agent(agent,maze)
+    return episode_step, episode_reward
+
+def train_agent(agent, maze, num_episodes=100):
+    episode_rewards = []
+    episode_steps = []
+
+    for episode in range(num_episodes):
+        episode_reward, episode_step, path = finish_episode(agent, maze, episode, train=True)
+
+        episode_rewards.append(episode_reward)
+        episode_steps.append(episode_step)
+
+    plt.figure(figsize=(10,5))
+
+    plt.subplot(1,2,1)
+    plt.plot(episode_rewards)
+    plt.xlabel('Episode')
+    plt.ylabel('Cummulative Reward')
+    plt.title('Reward per Episode')
+
+    average_reward = sum(episode_rewards) / len(episode_rewards)
+    print(f"The average reward is: {average_reward}")
+
+    plt.subplot(1,2,2)
+    plt.plot(episode_steps)
+    plt.xlabel('Episode')
+    plt.ylabel('Steps Taken')
+    plt.ylim(0,100)
+    plt.title('Steps per Episode')
+
+    average_steps = sum(episode_steps) / len(episode_steps)
+    print(f"The average steps is: {average_steps}")
+
+    plt.tight_layout()
+    plt.show()
+    
+
+train_agent()
+test_agent()
+
