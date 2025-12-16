@@ -8,14 +8,14 @@ tile_size = 30
 ##this is a change
 
 maze_overview = [
-    "XXXXXXXXXXXXXXX"
-    "X   X       XGX"
-    "X X X XXXXX X X"
-    "X X X     X X X"
-    "X X XXXXX X X X"
-    "X X     X X   X"
-    "X XXXXX X XXX X"
-    "XS      X     X"
+    "XXXXXXXXXXXXXXX",
+    "X   X       XGX",
+    "X X X XXXXX X X",
+    "X X X     X X X",
+    "X X XXXXX X X X",
+    "X X     X X   X",
+    "X XXXXX X XXX X",
+    "XS      X     X",
     "XXXXXXXXXXXXXXX"
 ]
 # sets up the screen for the maze
@@ -37,6 +37,42 @@ class WallDrawer(turtle.Turtle):
      def draw_wall(self,x,y):
          self.goto(x,y)
          self.stamp()
+
+
+#from CGPT
+
+class Maze:
+    def __init__(self, overview):
+        self.overview = overview
+        self.maze_height = len(overview)
+        self.maze_width = len(overview[0])
+
+        self.maze = np.zeros((self.maze_height, self.maze_width), dtype=int)
+        self.start_position = None
+        self.goal_position = None
+
+        for r, row in enumerate(overview):
+            for c, ch in enumerate(row):
+                if ch == "X":
+                    self.maze[r, c] = 1
+                elif ch == "S":
+                    self.start_position = (r, c)
+                elif ch == "G":
+                    self.goal_position = (r, c)
+
+        if self.start_position is None:
+            raise ValueError("No 'S' found in maze_overview")
+        if self.goal_position is None:
+            raise ValueError("No 'G' found in maze_overview")
+
+    def show_maze(self):
+        plt.figure(figsize=(5,5))
+        plt.imshow(self.maze, cmap="gray")
+        plt.scatter(self.start_position[1], self.start_position[0], marker="s")
+        plt.scatter(self.goal_position[1], self.goal_position[0], marker="s")
+        plt.gca().invert_yaxis()
+        plt.xticks([]); plt.yticks([])
+        plt.show()
 
 class Player(turtle.Turtle):
     def __init__(self, start_x, start_y):
@@ -121,11 +157,11 @@ screen.onkey(go_down,"Down")
 screen.onkey(go_left,"Left")
 screen.onkey(go_right,"Right")
 
-turtle.done()
+#turtle.done()
 
-actions = [(-1,0)
-           (1,0)
-           (0,-1)
+actions = [(-1,0),
+           (1,0),
+           (0,-1),
            (0,1)]
 
 class QLearningAgent:
@@ -149,13 +185,21 @@ class QLearningAgent:
         else:
             return np.argmax(self.q_table[state])
         
-    def update_q_table(self, state, action, next_state, reward):
+    '''def update_q_table(self, state, action, next_state, reward):
         best_next_action = np.argmax(self.q_table[next_state])
 
         current_q_value = self.q_table[state][action]
 
         new_q_value = current_q_value + self.learning_rate * (reward + self.discount_factor * self.q_table[next_state][best_next_action] - current_q_value)
-        return new_q_value
+        return new_q_value'''
+    
+    #cgpt
+    def update_q_table(self, state, action, next_state, reward):
+        best_next_action = np.argmax(self.q_table[next_state])
+        current_q_value = self.q_table[state][action]
+        td_target = reward + self.discount_factor * self.q_table[next_state][best_next_action]
+        self.q_table[state][action] = current_q_value + self.learning_rate * (td_target - current_q_value)
+
 
 goal_reward = 100
 wall_penalty = -10
@@ -172,8 +216,14 @@ def finish_episode(agent, maze, current_episode, train=True):
 
         action = agent.get_action(current_state,current_episode)
 
-        next_state = (current_state[0] + actions[action][0], current_state[1], actions[action][1])
-            
+        #next_state = (current_state[0] + actions[action][0], current_state[1], actions[action][1])
+
+        next_state = (
+            current_state[0] + actions[action][0],  # row
+            current_state[1] + actions[action][1],  # col
+        )
+
+
         if next_state[0] < 0 or next_state[0] >= maze.maze_height or next_state[1] < 0 or next_state[1] >= maze.maze_width or maze.maze[next_state[1]][next_state[0]] == 1:
             reward = wall_penalty
             next_state = current_state
@@ -261,8 +311,17 @@ def train_agent(agent, maze, num_episodes=100):
 
     plt.tight_layout()
     plt.show()
-    
 
-train_agent()
-test_agent()
+maze_layout = np.array([[]])
+start_x = 1
+start_y = 2
+goal_x = 6
+goal_y = 8
+maze =  Maze(maze_overview)
+maze.show_maze()
 
+agent = QLearningAgent(maze)
+train_agent(agent,maze)
+test_agent(agent,maze)
+
+ 
