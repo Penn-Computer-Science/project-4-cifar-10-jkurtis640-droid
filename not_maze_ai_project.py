@@ -211,9 +211,8 @@ def finish_episode(agent, maze, current_episode, train=True):
     episode_reward = 0
     episode_step = 0
     path = [current_state]
-    
-    while not is_done:
-
+    max_steps = 500
+    while not is_done and episode_step < max_steps:
         action = agent.get_action(current_state,current_episode)
 
         #next_state = (current_state[0] + actions[action][0], current_state[1], actions[action][1])
@@ -224,17 +223,17 @@ def finish_episode(agent, maze, current_episode, train=True):
         )
 
 
-        if next_state[0] < 0 or next_state[0] >= maze.maze_height or next_state[1] < 0 or next_state[1] >= maze.maze_width or maze.maze[next_state[1]][next_state[0]] == 1:
+        if next_state[0] < 0 or next_state[0] >= maze.maze_height or next_state[1] < 0 or next_state[1] >= maze.maze_width or maze.maze[next_state[0]][next_state[1]] == 1:
             reward = wall_penalty
             next_state = current_state
 
-        elif next_state == (maze.goal_position):
-             path.append(current_state)
+        elif next_state == maze.goal_position:
+             path.append(next_state)
              reward = goal_reward
              is_done = True
 
         else:
-            path.append(current_state)
+            path.append(next_state)
             reward = step_penalty
 
         episode_reward += reward
@@ -274,8 +273,6 @@ def test_agent(agent, maze, num_episodes=1):
     plt.xticks([]), plt.yticks([])
     plt.grid(color='black', linewidth=2)
     plt.show()
-    agent = QLearningAgent(maze)
-    test_agent(agent,maze)
     return episode_step, episode_reward
 
 def train_agent(agent, maze, num_episodes=100):
